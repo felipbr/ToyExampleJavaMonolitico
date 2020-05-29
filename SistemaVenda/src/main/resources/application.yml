@@ -1,0 +1,16 @@
+server:
+  port: 9095
+    
+## PostgreSQL
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sistema_venda
+    username: postgres
+    password: postgres
+
+#drop n create table again, good for testing, comment this in production
+  jpa:
+    hibernate:
+      ddl-auto: update
+      
+    show-sql: false

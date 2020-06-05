@@ -5,6 +5,8 @@ import java.security.NoSuchAlgorithmException;
 
 public final class Util {
 
+	private Util() {}
+	
 	public static String get_SHA_256(String passwordToHash) {
         
 		String generatedPassword = null;

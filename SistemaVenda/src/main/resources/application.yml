@@ -1,5 +1,5 @@
 server:
-  port: 9095
+  port: 80
     
 ## PostgreSQL
 spring:

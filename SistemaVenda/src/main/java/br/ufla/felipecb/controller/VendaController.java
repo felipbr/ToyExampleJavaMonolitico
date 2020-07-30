@@ -3,6 +3,8 @@ package br.ufla.felipecb.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +15,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.context.annotation.SessionScope;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 import br.ufla.felipecb.bean.ClienteBean;
 import br.ufla.felipecb.bean.ProdutoBean;
@@ -37,26 +41,14 @@ public class VendaController {
 	@Autowired
 	private ProdutoBean produtoBean;
 	
-	@Autowired
-	private AutenticacaoController autenticacaoController;
-	
 	//Mantem na seção
 	Venda venda;
 	List<Produto> produtos;
 	
-	//logica compra
-	@RequestMapping({ "", "/", "/index" })
-    public String login(Model model) {
-		if(autenticacaoController.verificarAutenticacao() == null) {
-			return "redirect:/autenticacao";
-		}
-		return "index";
-	}
-	
 	@RequestMapping("/criar")
-    public String criar(Model model) {
+    public String criar(HttpServletRequest request, Model model) {
 		
-		Funcionario func = autenticacaoController.verificarAutenticacao();
+		Funcionario func = (Funcionario) request.getSession().getAttribute("funcionario");
 		if(func == null) {
 			return "redirect:/autenticacao";
 		}
@@ -70,29 +62,48 @@ public class VendaController {
     	return "cadastroVenda";
     }
 	
-	@PostMapping(value = "/carregarVenda")
-    public String carregarVenda(@ModelAttribute("venda.cliente") Cliente cli, ModelMap model) {
+	@PostMapping(value = "/validarCliente")
+	public String validarCliente(@ModelAttribute("venda.cliente") Cliente cli, 
+			ModelMap model, final RedirectAttributes redirectAttrs) {
 		
 		Cliente cliente = clienteBean.buscarPorCPF(cli.getCpf());
 
-		if(cliente != null) {
-			venda.setCliente(cliente);
-			
-			venda.setListaItens(new ArrayList<ItemVenda>());
-			produtos = (List<Produto>) produtoBean.buscarProdutos();
-	    	
-			model.addAttribute("venda", venda);	
-	    	model.addAttribute("produtos", produtos);
-
-	    	ItemVenda iv = new ItemVenda();
-	    	iv.setProduto(new Produto());
-	    	model.addAttribute("item", iv);
-			
-		} else {
-			model.addAttribute("erro", "Cliente não cadastrado");
+		if(cliente == null) {
+			model.addAttribute("venda", venda);
 			model.addAttribute("cliente", cli);
+			model.addAttribute("erro", "Cliente não cadastrado");
+	    	return "cadastrovenda";
+		} else {
+			RedirectView rv = new RedirectView();
+			rv.setUrl("/venda/carregarVenda");
+			
+			redirectAttrs.addFlashAttribute("cliente", cliente);
+			
+			return "redirect:/venda/carregarVenda";
 		}
 		
+		
+	}
+	
+	
+	@RequestMapping(value = "/carregarVenda", method = { RequestMethod.POST, RequestMethod.GET })
+    public String carregarVenda(ModelMap model) {
+		
+		if(model.getAttribute("cliente") != null) {
+			venda.setCliente((Cliente)model.getAttribute("cliente"));
+			model.remove("cliente");
+		}
+		
+		venda.setListaItens(new ArrayList<ItemVenda>());
+		produtos = (List<Produto>) produtoBean.buscarProdutos();
+    	
+		model.addAttribute("venda", venda);	
+    	model.addAttribute("produtos", produtos);
+
+    	ItemVenda iv = new ItemVenda();
+    	iv.setProduto(new Produto());
+    	model.addAttribute("item", iv);
+			
 		model.addAttribute("venda", venda);
 		
 		return "cadastroVenda";
@@ -101,7 +112,11 @@ public class VendaController {
 	@PostMapping("/adicionarItem")
     public String adicionarItem(@ModelAttribute ItemVenda item, Model model) {
 		
-		if(item.getQuantidade() > 0) {
+		if(item.getProduto().getId() == null) {
+			model.addAttribute("erro", "Selecione o produto desejado");
+			model.addAttribute("item", item);
+		
+		} else if(item.getQuantidade() > 0) {
 			//Preenche o produto no objeto
 			for(Produto prod : produtos) {
 				if(prod.getId().equals(item.getProduto().getId())) {

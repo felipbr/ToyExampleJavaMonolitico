@@ -78,7 +78,7 @@
 				<br/>
 			</div>
 			
-			<form th:if="${cliente != null}" action="/venda/carregarVenda" th:object="${cliente}"
+			<form th:if="${cliente != null}" action="/venda/validarCliente" th:object="${cliente}"
 				method="post" style="width: 500px !important;" >
 				<div>
 					<span>CPF do comprador:</span>

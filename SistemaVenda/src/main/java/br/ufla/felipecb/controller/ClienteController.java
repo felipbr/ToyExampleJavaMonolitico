@@ -78,13 +78,13 @@ public class ClienteController {
 	
 	@ResponseBody
 	@RequestMapping("/recuperarPorCPF/{cpf}")
-    public Cliente ecuperarPorCPF(@PathVariable("cpf") String cpf, Model model) {
+    public Cliente recuperarPorCPF(@PathVariable("cpf") String cpf, Model model) {
     	return clienteBean.buscarPorCPF(cpf);
     }
 	
 	@ResponseBody
 	@RequestMapping("/recuperarPorId/{id}")
-	public Cliente ecuperarPorId(@PathVariable("id") Long id) {
+	public Cliente recuperarPorId(@PathVariable("id") Long id) {
 		return clienteBean.buscarCliente(id);
 	}
 	
